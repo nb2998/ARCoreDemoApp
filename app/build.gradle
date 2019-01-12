@@ -3,6 +3,7 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
 apply plugin: 'kotlin-android-extensions'
+apply plugin: 'com.google.ar.sceneform.plugin'
 
 android {
     compileSdkVersion 28
@@ -37,3 +38,9 @@ dependencies {
 
     implementation 'com.google.ar.sceneform.ux:sceneform-ux:1.6.0'
 }
+
+
+sceneform.asset('sampledata/archive/model.obj',
+        'default',
+        'sampledata/archive/model.sfa',
+        'src/main/assets/model')
