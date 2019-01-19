@@ -2,9 +2,11 @@ package com.apps.nb2998.arcoresampleapp
 
 import android.annotation.SuppressLint
 import android.net.Uri
+import android.os.Build
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v7.app.AlertDialog
+import android.util.Log
 import android.view.View
 import com.google.ar.core.Anchor
 import com.google.ar.core.Plane
@@ -29,10 +31,10 @@ class MainActivity : AppCompatActivity() {
         arFragment = supportFragmentManager.findFragmentById(R.id.sceneform_frag) as ArFragment
         arFragment.arSceneView.scene.addOnUpdateListener {
             arFragment.onUpdate(it)
-            onUpdate()
+//            onUpdate()
         }
 
-        fab.setOnClickListener{
+        fab.setOnClickListener {
             addObject(Uri.parse("model.sfb"))
         }
     }
@@ -40,11 +42,11 @@ class MainActivity : AppCompatActivity() {
     private fun addObject(parse: Uri) {
         val frame = arFragment.arSceneView.arFrame
         val point = getScreenCenter()
-        if(frame != null) {
+        if (frame != null) {
             val hits = frame.hitTest(point.x.toFloat(), point.y.toFloat())
-            for(hit in hits) {
-                val trackable  = hit.trackable
-                if(trackable is Plane && trackable.isPoseInPolygon(hit.hitPose)) {
+            for (hit in hits) {
+                val trackable = hit.trackable
+                if (trackable is Plane && trackable.isPoseInPolygon(hit.hitPose)) {
                     placeObject(arFragment, hit.createAnchor(), parse)
                     break
                 }
@@ -52,29 +54,37 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    @SuppressLint("NewApi")
     private fun placeObject(fragment: ArFragment, createAnchor: Anchor, model: Uri) {
-        ModelRenderable.builder()
-            .setSource(fragment.context, model)
-            .build()
-            .thenAccept {
-                addNodeToScene(fragment, createAnchor, it)
-            }
-            .exceptionally {
-                val builder = AlertDialog.Builder(this)
-                builder.setMessage(it.message)
-                    .setTitle("error!")
-                val dialog = builder.create()
-                dialog.show()
-                return@exceptionally null
-            }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            ModelRenderable.builder()
+                .setSource(fragment.context, model)
+                .build()
+                .thenAccept {
+                    addNodeToScene(fragment, createAnchor, it)
+                }
+                .exceptionally {
+                    val builder = AlertDialog.Builder(this)
+                    builder.setMessage(it.message)
+                        .setTitle("error!")
+                    val dialog = builder.create()
+                    dialog.show()
+                    return@exceptionally null
+                }
+        } else {
+            Log.d("TAG", "Android version")
+        }
     }
 
     private fun addNodeToScene(fragment: ArFragment, createAnchor: Anchor, renderable: ModelRenderable) {
         val anchorNode = AnchorNode(createAnchor)
         val transformableNode = TransformableNode(fragment.transformationSystem)
-        transformableNode.renderable = renderable
-        transformableNode.setParent(anchorNode)
+//        transformableNode.renderable = renderable
+//        transformableNode.setParent(anchorNode)
+
+        val rotatingNode = RotatingNode()
+        rotatingNode.addChild(transformableNode)
+        rotatingNode.setParent(anchorNode)
+
         fragment.arSceneView.scene.addChild(anchorNode)
         transformableNode.select()
     }
@@ -82,9 +92,5 @@ class MainActivity : AppCompatActivity() {
     private fun getScreenCenter(): android.graphics.Point {
         val vw = findViewById<View>(android.R.id.content)
         return android.graphics.Point(vw.width / 2, vw.height / 2)
-    }
-
-    private fun onUpdate() {
-
     }
 }
