@@ -78,8 +78,8 @@ class MainActivity : AppCompatActivity() {
     private fun addNodeToScene(fragment: ArFragment, createAnchor: Anchor, renderable: ModelRenderable) {
         val anchorNode = AnchorNode(createAnchor)
         val transformableNode = TransformableNode(fragment.transformationSystem)
-//        transformableNode.renderable = renderable
-//        transformableNode.setParent(anchorNode)
+        transformableNode.renderable = renderable
+        transformableNode.setParent(anchorNode)
 
         val rotatingNode = RotatingNode()
         rotatingNode.addChild(transformableNode)
